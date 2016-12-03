@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>TicTacToe - game</title>
+        <style>
+            body {
+                font-family: Courier;
+                background-color: #fbfafa;
+            }
+            .cell{
+                cursor: pointer;
+                background-color: #eeeeee;
+                font-size: 20px;
+                color:#545454;
+            }
+            .disabled{
+                font-size: 20px;
+                cursor: not-allowed;
+            }
+            .x {
+                background-color: #009688;
+                border-color:#545454;
+            }
+            .o {
+                background-color:#4CAF50;/* #FF9800;*/
+                border-color:#545454;
+            }
+            .x,.o{
+                font-size: 20px;
+                color: #e4e4e4;
+                font-weight: bold;
+                cursor: auto;
+                border-radius: 5px;;
+            }
+            button.x, button.o {
+                width: 40px;
+                height: 40px;
+                border: none;
+                padding: 10px;
+                cursor: pointer;
+            }
+            #logs {
+                font-size: 12px;
+                font-style: italic;
+                color:#5d5b5b;
+                background-color: #ffffff;
+                height:296px;width:286px;overflow-y:scroll;float:left;text-align: left;border:2px solid #c7c7c7;margin-left:10px
+            }
+            #logs > p {
+                margin-left:15px;
+                border-bottom: 1px solid #efefef;
+                padding-bottom: 5px;
+            }
+            #playAs {
+                margin-top: 30%;
+            }
+            .game-section {
+                position:relative;display:block;margin: 0 auto; width: 610px;text-align: center; clear: both;
+            }
+            .controls {
+                position:relative;display:inline-block;margin: 0 auto; width: 610px;text-align: center; clear: both;
+            }
+            .hint {
+                border-color: red;
+                background-color: #ff9e9e;
+                border-radius: 5px;
+            }
+        </style>
+    </head>
+    <body>
+    <div class="game-section">
+        <div style="float: left;">
+            <h3>TicTacToe</h3>
+            <table id="board" width="300" height="300" border="1" cellpadding="5" cellspacing="1" bordercolor="#c7c7c7" style="background-color: #d4d4d4">
+                <tbody>
+                <tr>
+                    <td class="cell" onclick="move('0-0')" id="0-0">
+                        ?
+                    </td>
+                    <td class="cell" onclick="move('0-1')" id="0-1">
+                        ?
+                    </td>
+                    <td class="cell"  onclick="move('0-2')" id="0-2">
+                        ?
+                    </td>
+                </tr>
+                <tr>
+                    <td class="cell"  onclick="move('1-0')" id="1-0">
+                        ?
+                    </td>
+                    <td class="cell"  onclick="move('1-1')" id="1-1">
+                        ?
+                    </td>
+                    <td class="cell"  onclick="move('1-2')" id="1-2">
+                        ?
+                    </td>
+                </tr>
+                <tr>
+                    <td class="cell"  onclick="move('2-0')" id="2-0">
+                        ?
+                    </td>
+                    <td class="cell"  onclick="move('2-1')" id="2-1">
+                        ?
+                    </td>
+                    <td class="cell"  onclick="move('2-2')" id="2-2">
+                        ?
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div style="float:left;">
+            <h3>Game Logs</h3>
+            <div id="logs" >
+                <div id="playAs" style="text-align: center">
+                    Welcome player!
+                    <br><br>
+                    <label for="difficulty">Difficulty:</label>
+                    <select id="difficulty">
+                        <option value="0" selected>Easy</option>
+                        <option value="1" >Normal</option>
+                        <option value="2" >Hard</option>
+                    </select>
+                    <br/> <br>
+                    Please select your token:
+                    <br><br>
+                    <button type="button" class="x" onclick="start('x')">X</button>
+                    <button type="button" class="o" onclick="start('o')">O</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="game-section">
+        <div class="controls">
+            <h3>Controls</h3>
+            <h5>
+                <button type="button" onclick="showHint()">Show Hint</button>
+                <button type="button" onclick="playAgain()">Play Again</button>
+            </h5>
+            <h5>
+                <button type="button" onclick="reset()">Reset Game</button>
+            </h5>
+        </div>
+    </div>
+    <script>
+        var token = null; var gameStatus = 'over';
+        var url = window.location.href;
+        url = url.replace('index.html','');
+        if(url.substr(url.length-1) != '/'){
+            url = url+"/";
+        }
+        function gameLog(log, special){
+            var logs = document.getElementById("logs");
+            var p = document.createElement('p');
+            var text = document.createTextNode(' * '+log);
+            if(special == true){
+                var b = document.createElement('b');
+                b.appendChild(text);
+                p.appendChild(b);
+            } else {
+                p.appendChild(text);
+            }
+            logs.insertBefore( p, logs.firstChild );
+        }
+        function clearLog(){
+            var logs = document.getElementById("logs");
+            var ps = logs.querySelectorAll('p');
+            ps.forEach(function(p){
+                logs.removeChild(p);
+            });
+        }
+        function disableCells() {
+            var board = document.getElementById("board");
+            var cells = board.querySelectorAll('td');
+            cells.forEach(function(c){
+                if(c.className == 'cell' ){
+                    c.className = 'disabled';
+                    c.innerHTML = "&nbsp;";
+                }
+            });
+        }
+        function readData() {
+            var connector = '-';
+            var matrix = [];
+            var moves = [];
+            for(var i=0;i<3;i++){
+                matrix[i]=[];
+                for(var j=0;j<3;j++){
+                    var entry = i+connector+j;
+                    matrix[i][j]=[];
+                    moves.push(entry)
+                }
+            }
+            for(var k=0;k<moves.length;k++){
+                var b = moves[k];
+                var c = document.getElementById(b);
+                var coords = b.split(connector);
+                matrix[coords[0]][coords[1]] = c.innerText == '?' ?'': c.innerText;
+            }
+            return matrix;
+        }
+        function clearData() {
+            var moves = [];
+            for(var i=0;i<3;i++){
+                for(var j=0;j<3;j++){
+                    var entry = i+'-'+j;
+                    moves.push(entry)
+                }
+            }
+            for(var k=0;k<moves.length;k++){
+                var b = moves[k];
+                var c = document.getElementById(b);
+                c.innerText ='?';
+                c.className = 'cell';
+            }
+        }
+        function interpretPosition(position){
+            var rows = ["Top","Middle","Bottom" ];
+            var columns = ["Left","Center","Right"];
+            var move = position.split('-');
+            return rows[move[0]]+" "+columns[move[1]];
+        }
+        function makeMove(position, token, type){
+            var cell = document.getElementById(position);
+            cell.setAttribute('class',token);
+            cell.innerText =token;
+            gameLog(type.toUpperCase()+': "'+interpretPosition(position)+'" cell', false);
+        }
+        function move(position) {
+            var a = document.getElementById('playAs');
+            if(a.style.display == 'none'){
+                var cell = document.getElementById(position);
+                if(cell.innerText == '?'){
+                    makeMove(position,token, 'player');
+                    setTimeout(function() {
+                        var data = readData();
+                        var xhr;
+                        xhr = new XMLHttpRequest();
+                        xhr.onreadystatechange = function() {
+                            if (this.readyState == 4 && this.status == 200) {
+                                var response = JSON.parse(this.responseText);
+                                var player = response['player'];
+                                var bot = response['bot'];
+                                var type = response['type'];
+                                var bot_move = response['botMove'];
+                                var status = response['status'];
+                                gameStatus = status;
+                                var winner = response['winner'];
+                                var lastMove = response['lastMove'];
+                                token = player;
+                                if(status == 'over'){
+                                    disableCells();
+                                    if(type == 'draw'){
+                                        makeMove(bot_move,bot,'bot');
+                                        gameLog('Draw game. Game Over!', true);
+                                    } else {
+                                        makeMove(bot_move,bot,'bot');
+                                        gameLog(type.toUpperCase()+' wins! Game Over!',true);
+                                    }
+                                } else {
+                                    makeMove(bot_move,bot,'bot');
+                                }
+                            }
+                        };
+                        xhr.open("GET", url +"api.php?action=newMove&board="+JSON.stringify(data), true);
+                        xhr.send();
+                    }, 100);
+                }
+            } else {
+                alert("Please select your Player Token;");
+            }
+        }
+        function start(player) {
+            token = player;
+            var a = document.getElementById('playAs');
+            var level = document.getElementById('difficulty');
+            var xhr;
+            xhr = new XMLHttpRequest();
+            xhr.onreadystatechange = function() {
+                if (this.readyState == 4 && this.status == 200) {
+                    var response = JSON.parse(this.responseText);
+                    var bot = response.bot;
+                    gameStatus = response['status'];
+                    gameLog('PLAYER has "'+player+'" token.', false);
+                    gameLog('BOT has "'+bot+'" token.',false);
+                    gameLog('Game started. Player Moves first.', false);
+                    a.style.display = "none";
+                }
+            };
+            xhr.open("GET", url +"api.php?action=startGame&player="+player+'&level='+level.value, true);
+            xhr.send();
+        }
+        function playAgain() {
+            var a = document.getElementById('playAs');
+            if(a.style.display == 'none'){
+                clearData();
+                clearLog();
+                var xhr;
+                xhr = new XMLHttpRequest();
+                xhr.onreadystatechange = function() {
+                    if (this.readyState == 4 && this.status == 200) {
+                        var response = JSON.parse(this.responseText);
+                        gameStatus = response['status'];
+                        var bot = response['bot'];
+                        gameLog('PLAYER has "'+token+'" token.', false);
+                        gameLog('BOT has "'+bot+'" token.', false);
+                        gameLog('Game started. Player Moves first.', false);
+                        a.style.display = "none";
+                    }
+                };
+                xhr.open("GET", url +"api.php?action=newGame", true);
+                xhr.send();
+            }
+        }
+        function reset() {
+            var a = document.getElementById('playAs');
+            if(a.style.display == 'none'){
+                clearData();
+                clearLog();
+                var xhr;
+                xhr = new XMLHttpRequest();
+                xhr.onreadystatechange = function() {
+                    if (this.readyState == 4 && this.status == 200) {
+                        a.style.display = "block";
+                        gameStatus = 'over';
+                    }
+                };
+                xhr.open("GET", url +"api.php?action=resetGame", true);
+                xhr.send();
+            }
+        }
+        function showHint() {
+            var a = document.getElementById('playAs');
+            if(a.style.display == 'none' && gameStatus != 'over'){
+                var xhr;
+                xhr = new XMLHttpRequest();
+                xhr.onreadystatechange = function() {
+                    if (this.readyState == 4 && this.status == 200) {
+                        var response = JSON.parse(this.responseText);
+                        var elem = document.getElementById(response.hint);
+                        elem.classList.add("hint");
+                        setTimeout(function () {
+                            elem.classList.remove("hint");
+                        }, 500);
+                    }
+                };
+                xhr.open("GET", url +"api.php?action=showHint", true);
+                xhr.send();
+            }
+        }
+    </script>
+    </body>
+</html>

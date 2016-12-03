@@ -1,0 +1,12 @@
+{
+    "name": "TicTacToe game",
+    "author": "Ionut Marchis",
+    "description": "TicTacToe game with bot",
+    "require": {
+        "phpunit/phpunit": "4.7.*"
+    },
+    "autoload": {
+        "psr-4": {"TicTacToe\\": ["src/","src/Classes","src/Interfaces"]},
+        "classmap": ["src/Classes", "src/Interfaces"]
+    }
+}
